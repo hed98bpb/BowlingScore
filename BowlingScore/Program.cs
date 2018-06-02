@@ -1,25 +1,25 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace BowlingScore
 {
-    class BowlingScore
+    public class BowlingScore
     {
         static void Main(string[] args)
         {
-            string input = "";
-
             while (true)
             {
 
-                Console.WriteLine("Hi! Please enter your bowling score");
+                Console.WriteLine("Hi! How many will be playing?");
 
-                RunGame();
+                BowlingGame game = new BowlingGame();
+                game.RunGame();
 
                 Console.WriteLine("Press 'x' to quit, or press 'p' to play again");
 
-                input = Console.ReadLine();
+                string input = Console.ReadLine();
 
                 while (!(input.Equals("x") || input.Equals("p")))
                 {
@@ -37,220 +37,205 @@ namespace BowlingScore
 
         }
 
-        static void RunGame()
+    }
+
+    public class BowlingGame
+    {
+        int numberOfPlayers;
+
+        public BowlingGame()
+        {
+            string numberOfPlayer = Console.ReadLine();
+            while (illegalNumberOfPlayers(numberOfPlayer))
+            {
+                Console.WriteLine("That doesn't seem right. Please enter a number between 1 and 4 :-)");
+                numberOfPlayer = Console.ReadLine();
+            }
+            
+            this.numberOfPlayers = int.Parse(numberOfPlayer);
+        }
+
+        private bool illegalNumberOfPlayers(string numberOfPlayer)
+        {
+            return !Regex.IsMatch(numberOfPlayer, @"^([1-4])$"); ;
+        }
+
+        public void RunGame()
         {
             int numberOfFrames = 0;
-
-            Player player1 = new Player("Player 1");
-            Player player2 = new Player("Player 2");
-
-            List<Player> playerList = new List<Player> { player1, player2 };
-
+            List<Player> playerList = createPlayerList(numberOfPlayers);
+                
             // Handles first 9 round
-            while (numberOfFrames <= 8)
+            while (numberOfFrames < 9)
             {
                 HandleRound(ref numberOfFrames, playerList);
             }
 
-            Console.WriteLine("Last round!!!");
+            Console.WriteLine("\nLast round!!!");
 
             LastRound(playerList);
 
-            if (player1.playerScore > player2.playerScore) Console.WriteLine("The winner is " + player1.playerName + " with " + player1.playerScore + "points");
-            else if (player1.playerScore < player2.playerScore) Console.WriteLine("The winner is " + player2.playerName + " with " + player2.playerScore + "points");
-            else Console.WriteLine("Wow it's a tie with " + player1.playerScore + " to both players!");
+            ScoreBoardCalculater cal = new ScoreBoardCalculater();
+            cal.calculateScoreBoards(playerList);
+
+            Player winner = calculateWinner(playerList);
+
+            // doesnt account for ties
+            Console.WriteLine("The winner is " + winner.playerName + " with " + winner.totalScore + "points");
 
         }
 
-        static void HandleRound(ref int numberOfFrames, List<Player> playerList)
+        public Player calculateWinner(List<Player> playerList)
+        {
+            return playerList.OrderBy(player => player.totalScore).ToList().First();
+        }
+
+        public List<Player> createPlayerList(int numberOfPlayers)
+        {
+            List<Player> playerList = new List<Player>();
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                playerList.Add(new Player("Player " + (i + 1)));
+            }
+
+            return playerList;
+        }
+
+        public void HandleRound(ref int numberOfFrames, List<Player> playerList)
         {
             numberOfFrames++;
 
             Console.WriteLine("\nRound: " + numberOfFrames + "!");
-            
+
             foreach (Player player in playerList)
             {
                 OneFrameForOnePlayer(player);
             }
         }
 
-        static void LastRound(List<Player> playerList)
+        public void LastRound(List<Player> playerList)
         {
 
             foreach (Player player in playerList)
             {
-
                 Console.WriteLine("\n" + player.playerName + " to bowl");
 
                 AssignsIntegerInputToPlayersRoll(player, 1);
-                UpdatePlayerScore(player, 1);
 
-                HandleBonuses(player);
-
-                if (IsStrikeFrame(player))
+                if (IsStrikeAndPrints(player))
                 {
                     AssignsIntegerInputToPlayersRoll(player, 2);
-                    UpdatePlayerScore(player, 2);
 
-                    HandleBonuses(player);
+                    if (player.roll2 == 10)
+                    {
+                        Console.WriteLine("Strike!");
 
-                    Console.WriteLine("\nBonus roll!");
+                        AssignsIntegerInputToPlayersRoll(player, 3);
 
-                    AssignsIntegerInputToPlayersRoll(player, 1);
-                    UpdatePlayerScore(player, 1);
+                        if (ThirdRollStrike(player))
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        AssignLegalSecondOrThirdRoll(player, 3);
+                    }
+
                 }
                 else
                 {
-                    AssignsIntegerInputToPlayersRoll(player, 2);
-                    UpdatePlayerScore(player, 2);
+                    AssignLegalSecondOrThirdRoll(player, 2);
 
-                    HandleBonuses(player);
-
-                    if (IsSpareFrame(player))
+                    if (IsSpareAndPrints(player))
                     {
-                        Console.WriteLine(player.playerName + "'s score: " + player.playerScore);
-                        Console.WriteLine("\nBonus roll!");
-                        
-                        AssignsIntegerInputToPlayersRoll(player, 1);
-                        UpdatePlayerScore(player, 1);
+                        AssignsIntegerInputToPlayersRoll(player, 3);
+
+                        if (ThirdRollStrike(player))
+                        {
+
+                        }
+
                     }
+
                 }
 
-                Console.WriteLine(player.playerName + "'s final score: " + player.playerScore);
+                player.frameHistory.Add(new Frame(player.roll1, player.roll2, player.roll3));
+
+                Console.WriteLine("That was it for " + player.playerName);
 
             }
         }
 
-        static void OneFrameForOnePlayer(Player player)
+        public bool ThirdRollStrike(Player player)
+        {
+            if (player.roll3 == 10)
+            {
+                Console.WriteLine("Strike!");
+                return true;
+            }
+            return false;
+        }
+
+        public void OneFrameForOnePlayer(Player player)
         {
             Console.WriteLine("\n" + player.playerName + " to bowl");
 
             AssignsIntegerInputToPlayersRoll(player, 1);
 
-            HandleBonuses(player);
-            
-            if (IsStrikeFrame(player))
+            if (IsStrikeAndPrints(player))
             {
-                HandleStrikeFrame(player);
-
-                Console.WriteLine(player.playerName + "'s total score: " + player.playerScore);
+                player.frameHistory.Add(new Frame(player.roll1));
             }
             else
             {
-                UpdatePlayerScore(player, 1);
+                AssignLegalSecondOrThirdRoll(player, 2);
 
-                AssignsIntegerInputToPlayersRoll(player, 2);
-                AssignLegalSecondThrow(player);
-
-                if (player.strikeBonus) HandleStrikeBonus(player, 2);
-
-                if (IsSpareFrame(player))
+                if (IsSpareAndPrints(player))
                 {
                     player.spareBonus = true;
-                    Console.WriteLine("Spare!");
+
                 }
 
-                UpdatePlayerScore(player, 2);
+                player.frameHistory.Add(new Frame(player.roll1, player.roll2));
 
-                Console.WriteLine(player.playerName + "'s score: " + player.playerScore);
             }
 
             player.roll1 = 0;
             player.roll2 = 0;
         }
 
-        static void HandleStrikeFrame(Player player)
+        public bool IsSpareAndPrints(Player player)
         {
-
-            if (IsDoubleStrikeFrame(player))
+            if (player.roll1 + player.roll2 == 10)
             {
-                player.rolledADoubleStrike();
-                UpdatePlayerScore(player, 1);
+                Console.WriteLine("Spare!");
+                return true;
             }
-            else if (player.strikeBonus)
-            {
-                player.rolledAStrike();
-                UpdatePlayerScore(player, 1);
-            }
-            else
-            {
-                player.rolledAStrike();
-                UpdatePlayerScore(player, 1);
-            }
+            return false;
         }
 
-        static void HandleBonuses(Player player)
+        public bool IsStrikeAndPrints(Player player)
         {
-            if (player.doubleStrikeBonus) HandleDoubleStrikeBonus(player, 1);
-            else if (player.strikeBonus) HandleStrikeBonus(player, 1);
-            else if (player.spareBonus) HandleSpareBonus(player);
-            
-        }
-
-        static void HandleDoubleStrikeBonus(Player player, int rollCounter)
-        {
-            if (player.awardBonusForDoubleStrikeLeft == 1)
+            if (player.roll1 == 10)
             {
-                player.playerScore += 2 * player.getRoll(rollCounter);
-                player.awardBonusForDoubleStrikeLeft--;
-                player.awardBonusForStrikeLeft--;
-                player.doubleStrikeBonus = false;
-            }
-        }
-
-        static void HandleSpareBonus(Player player)
-        {
-            player.playerScore += player.getRoll(1);
-            player.spareBonus = false;
-        }
-
-        static void HandleStrikeBonus(Player player, int rollCounter)
-        {
-            if (player.awardBonusForStrikeLeft == 2)
-            {
-                player.playerScore += player.getRoll(rollCounter);
-                player.awardBonusForStrikeLeft--;
-            } else if (player.awardBonusForStrikeLeft == 1)
-            {
-                player.playerScore += player.getRoll(rollCounter);
-                player.awardBonusForStrikeLeft--;
-                player.strikeBonus = false;
+                Console.WriteLine("Strike!");
+                return true;
             }
 
+            return false;
         }
 
-        static void UpdatePlayerScore(Player player, int rollCounter)
-        {
-            if (rollCounter == 1) player.oldRoll1 = player.roll1;
-
-            player.playerScore += player.getRoll(rollCounter);
-        }
-
-        static bool IsSpareFrame(Player player)
-        {
-            return player.roll1 + player.roll2 == 10;
-        }
-
-        static bool IsStrikeFrame(Player player)
-        {
-            return player.roll1 == 10;
-        }
-
-        static bool IsDoubleStrikeFrame(Player player)
-        {
-            return player.oldRoll1 == 10 && player.roll1 == 10;
-        }
-
-        static bool CheckForLegalIntegerInput(string input)
+        public bool CheckForLegalIntegerRoll(string input)
         {
             return Regex.IsMatch(input, @"^([0-9]|10)$"); ;
         }
 
-        static void AssignsIntegerInputToPlayersRoll(Player player, int rollCounter)
+        public void AssignsIntegerInputToPlayersRoll(Player player, int rollCounter)
         {
             string input = Console.ReadLine();
 
-            while (!CheckForLegalIntegerInput(input))
+            while (!CheckForLegalIntegerRoll(input))
             {
                 Console.WriteLine("Try a legal input :)");
                 input = Console.ReadLine();
@@ -259,77 +244,164 @@ namespace BowlingScore
             player.setRoll(rollCounter, int.Parse(input));
         }
 
-        static void AssignLegalSecondThrow(Player player)
+        public void AssignLegalSecondOrThirdRoll(Player player, int rollCounter)
         {
+            AssignsIntegerInputToPlayersRoll(player, rollCounter);
 
-            while(player.roll1 + player.roll2 > 10)
+            while (player.getRoll(rollCounter - 1) + player.getRoll(rollCounter) > 10)
             {
                 Console.WriteLine("Second roll is too big, did you count right?");
-                AssignsIntegerInputToPlayersRoll(player, 2);
+                AssignsIntegerInputToPlayersRoll(player, rollCounter);
             }
 
         }
-
     }
 
-    class Player
+    public class ScoreBoardCalculater
+    {
+        public void calculateScoreBoards(List<Player> playerList)
+        {
+            foreach (Player player in playerList)
+            {
+                CalculatePlayersScoreBoard(player);
+            }
+        }
+        
+        public void CalculatePlayersScoreBoard(Player player)
+        {
+            Frame frame;
+            for (int frameNumber = 0; frameNumber < 10; frameNumber++)
+            {
+                frame = player.frameHistory[frameNumber];
+                if (frame.isStrikeFrame)
+                {
+                    calculateStrikeFrame(player.frameHistory, frame, frameNumber);
+                }
+                else if (frame.isSpareFrame) 
+                {
+                    calculateSpareFrame(player.frameHistory, frame, frameNumber);
+                }
+                else if (frame.isLastFrame)
+                {
+                    calculateLastFrame(frame, frameNumber);
+                }
+                else calculateRegularFrame(frame, frameNumber);
+
+                player.totalScore += frame.frameScore;
+            }
+        }
+
+        private void calculateLastFrame(Frame frame, int frameNumber)
+        {
+            frame.frameScore = frame.roll1 + frame.roll2 + frame.roll3;
+        }
+
+        private void calculateRegularFrame(Frame frame, int frameNumber)
+        {
+            frame.frameScore = frame.roll1 + frame.roll2;
+        }
+
+        private void calculateSpareFrame(List<Frame> frameHistory, Frame frame, int frameNumber)
+        {
+            frame.frameScore = frame.roll1 + frame.roll2 + frameHistory[frameNumber + 1].roll1;
+        }
+
+        public void calculateStrikeFrame(List<Frame> frameHistory, Frame frame, int frameNumber)
+        {
+            Frame nextFrame = frameHistory[frameNumber + 1];
+
+            if (nextFrame.isStrikeFrame)
+            {
+                frame.frameScore = frame.roll1 + nextFrame.roll1 + frameHistory[frameNumber + 2].roll1;
+            }
+            else
+            {
+                frame.frameScore = frame.roll1 + nextFrame.roll1 + nextFrame.roll2;
+            }
+        }
+
+        public bool IsStrike(Player player, int frame)
+        {
+            return false;
+        }
+    }
+
+    public class Player
     {
         public string playerName;
 
-        public int playerScore { get; set; }
+        public int totalScore { get; set; }
         public int numberOfRolls { get; set; }
         public int oldRoll1 { get; set; }
         public int roll1;
         public int roll2;
+        public int roll3;
         public int awardBonusForStrikeLeft { get; set; }
         public int awardBonusForDoubleStrikeLeft { get; set; }
 
-        public bool spareBonus { get; set; }
-        public bool strikeBonus { get; set; }
-        public bool doubleStrikeBonus { get; set; }
+        public bool spareBonus { get; set; } = false;
+        public bool strikeBonus { get; set; } = false;
+        public bool doubleStrikeBonus { get; set; } = false;
+
+        public List<Frame> frameHistory { get; set; } = new List<Frame>();
 
         public Player(string playername)
         {
             this.playerName = playername;
-            this.playerScore = 0;
-            this.oldRoll1 = 0;
-            this.roll1 = 0;
-            this.roll2 = 0;
-            this.spareBonus = false;
-            this.strikeBonus = false;
-            this.doubleStrikeBonus = false;
-            this.awardBonusForStrikeLeft = 0;
-            this.awardBonusForDoubleStrikeLeft = 0;
         }
 
         public void setRoll(int rollCounter, int rollScore)
         {
             if (rollCounter == 1) this.roll1 = rollScore;
             if (rollCounter == 2) this.roll2 = rollScore;
+            if (rollCounter == 3) this.roll3 = rollScore;
         }
 
         public int getRoll(int roll)
         {
             if (roll == 1) return roll1;
             if (roll == 2) return roll2;
+            if (roll == 3) return roll3;
             return 0;
         }
 
-        public void rolledAStrike()
+    }
+
+    public class Frame
+    {
+        public bool isStrikeFrame { get; } = false;
+        public bool isSpareFrame { get; } = false;
+        public bool isLastFrame { get; } = false;
+
+        public int roll1 { get; }
+        public int roll2 { get; }
+        public int roll3 { get; }
+
+        public int frameScore { get; set; } = 0;
+
+        public Frame(int roll1)
         {
-            Console.WriteLine("Strike!");
-            strikeBonus = true;
-            awardBonusForStrikeLeft = 2;
+            this.roll1 = roll1;
+            isStrikeFrame = true;
         }
 
-        public void rolledADoubleStrike()
+        public Frame(int roll1, int roll2)
         {
-            Console.WriteLine("Double Strike!!");
-            strikeBonus = true;
-            doubleStrikeBonus = true;
-            awardBonusForStrikeLeft = 2;
-            awardBonusForDoubleStrikeLeft = 1;
+            this.roll1 = roll1;
+            this.roll2 = roll2;
+
+            if (roll1 + roll2 == 10) isSpareFrame = true;
+            else isSpareFrame = false;
         }
+
+        public Frame(int roll1, int roll2, int roll3)
+        {
+            this.roll1 = roll1;
+            this.roll2 = roll2;
+            this.roll3 = roll3;
+            isLastFrame = true;
+        }
+
 
     }
 }
