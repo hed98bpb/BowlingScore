@@ -3,10 +3,11 @@ using Xunit;
 
 namespace BowlingScore.Test
 {
-
+    
     public class ScoreBoardCalculaterTester
     {
 
+        [Fact]
         public void ExamplePdfScore133()
         {
             Player testPlayer = new Player("Player 1");
@@ -25,6 +26,7 @@ namespace BowlingScore.Test
             Assert.Equal(testPlayer.TotalScore, 133);
         }
 
+        [Fact]
         public void Perfect300Game()
         {
             Player testPlayer = new Player("Player 1");
@@ -43,6 +45,7 @@ namespace BowlingScore.Test
             Assert.Equal(testPlayer.TotalScore, 300);
         }
 
+        [Fact]
         public void Bad0Game()
         {
             Player testPlayer = new Player("Player 1");
@@ -61,6 +64,7 @@ namespace BowlingScore.Test
             Assert.Equal(testPlayer.TotalScore, 0);
         }
 
+        [Fact]
         public void A107Game()
         {
             Player testPlayer = new Player("Player 1");
@@ -76,7 +80,26 @@ namespace BowlingScore.Test
             ScoreBoardCalculater sbc = new ScoreBoardCalculater();
             sbc.CalculateScoreBoards(new List<Player> { testPlayer });
 
-            Assert.False(true);
+            Assert.Equal(testPlayer.TotalScore, 107);
+        }
+
+        [Fact]
+        public void A129Game()
+        {
+            Player testPlayer = new Player("Player 1");
+
+            List<Frame> testFrameHistory = new List<Frame> {
+                new Frame(6,1), new Frame(4,0), new Frame(7,0),
+                new Frame(8,1), new Frame(10), new Frame(10),
+                new Frame(9,1), new Frame(9,1), new Frame(8,0),
+                new Frame(8,0)};
+
+            testPlayer.FrameHistory = testFrameHistory;
+
+            ScoreBoardCalculater sbc = new ScoreBoardCalculater();
+            sbc.CalculateScoreBoards(new List<Player> { testPlayer });
+
+            Assert.Equal(testPlayer.TotalScore, 129);
         }
     }
 }
