@@ -1,0 +1,9 @@
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\bin\Debug\netcoreapp1.1\BowlingScore.deps.json
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\bin\Debug\netcoreapp1.1\BowlingScore.runtimeconfig.json
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\bin\Debug\netcoreapp1.1\BowlingScore.runtimeconfig.dev.json
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\bin\Debug\netcoreapp1.1\BowlingScore.dll
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\bin\Debug\netcoreapp1.1\BowlingScore.pdb
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\obj\Debug\netcoreapp1.1\BowlingScore.csprojResolveAssemblyReference.cache
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\obj\Debug\netcoreapp1.1\BowlingScore.AssemblyInfo.cs
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\obj\Debug\netcoreapp1.1\BowlingScore.dll
+C:\Users\burga\OneDrive\Dokumenter\Visual Studio 2017\Projects\BowlingScore\BowlingScore\obj\Debug\netcoreapp1.1\BowlingScore.pdb
